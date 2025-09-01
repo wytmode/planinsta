@@ -1,7 +1,8 @@
-// middleware.ts
+// middleware.ts (or src/middleware.ts)
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { limitByKeyEdge } from "@/lib/rate-limit-edge"; // ⬅️ Edge-safe import (NOT "@/lib/rate-limit")
+// ⬅️ IMPORTANT: Edge-safe helper, not "@/lib/rate-limit"
+import { limitByKeyEdge } from "./lib/rate-limit-edge"; // use RELATIVE path from this file
 
 export const config = {
   matcher: [
@@ -18,24 +19,22 @@ function computeRetryAfter(reset: unknown) {
   let resetAt: string | undefined;
 
   if (Number.isFinite(n)) {
-    if (n < 1e6) {
-      retryAfter = Math.ceil(n / 1000);                 // duration ms → s
-    } else if (n > 1e9 && n < 1e12) {
-      retryAfter = Math.ceil(n - nowMs / 1000);         // epoch seconds
+    if (n < 1e6) retryAfter = Math.ceil(n / 1000);                 // ms → s
+    else if (n > 1e9 && n < 1e12) {                                 // epoch s
+      retryAfter = Math.ceil(n - nowMs / 1000);
       resetAt = new Date(n * 1000).toISOString();
-    } else if (n >= 1e12) {
-      retryAfter = Math.ceil((n - nowMs) / 1000);       // epoch ms
+    } else if (n >= 1e12) {                                         // epoch ms
+      retryAfter = Math.ceil((n - nowMs) / 1000);
       resetAt = new Date(n).toISOString();
     }
   }
-
   return { retryAfter: Math.max(0, Math.min(60, retryAfter)), resetAt };
 }
 
 export default async function middleware(req: NextRequest) {
-  // ⚠️ No req.ip here. Use headers (Edge-safe) and optional x-user-id
   const h = req.headers;
   const userId = h.get("x-user-id")?.trim();
+  // ⬇️ NO req.ip anywhere; headers only
   const ip =
     h.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     h.get("x-real-ip")?.trim() ||
@@ -74,7 +73,6 @@ export default async function middleware(req: NextRequest) {
     if (resetAt) res.headers.set("X-RateLimit-Reset-At", resetAt);
     return res;
   } catch {
-    // Degraded mode: don’t block; just tag the request
     return NextResponse.next({ headers: { "X-Bouncer": "degraded" } });
   }
 }
