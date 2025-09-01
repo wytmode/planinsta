@@ -2,7 +2,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 // ⬅️ IMPORTANT: Edge-safe helper, not "@/lib/rate-limit"
-import { limitByKeyEdge } from "./lib/rate-limit-edge"; // use RELATIVE path from this file
+import { limitByKeyEdge } from "@/lib/rate-limit-edge";
 
 export const config = {
   matcher: [
