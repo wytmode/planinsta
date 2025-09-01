@@ -1,7 +1,7 @@
 // middleware.ts
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { limitByKeyEdge } from "@/lib/rate-limit"; // ⬅️ Edge-safe (Upstash) helper
+import { limitByKeyEdge } from "@/lib/rate-limit-edge"; // ⬅️ Edge-safe import (NOT "@/lib/rate-limit")
 
 export const config = {
   matcher: [
@@ -19,12 +19,12 @@ function computeRetryAfter(reset: unknown) {
 
   if (Number.isFinite(n)) {
     if (n < 1e6) {
-      retryAfter = Math.ceil(n / 1000);
+      retryAfter = Math.ceil(n / 1000);                 // duration ms → s
     } else if (n > 1e9 && n < 1e12) {
-      retryAfter = Math.ceil(n - nowMs / 1000);
+      retryAfter = Math.ceil(n - nowMs / 1000);         // epoch seconds
       resetAt = new Date(n * 1000).toISOString();
     } else if (n >= 1e12) {
-      retryAfter = Math.ceil((n - nowMs) / 1000);
+      retryAfter = Math.ceil((n - nowMs) / 1000);       // epoch ms
       resetAt = new Date(n).toISOString();
     }
   }
@@ -33,6 +33,7 @@ function computeRetryAfter(reset: unknown) {
 }
 
 export default async function middleware(req: NextRequest) {
+  // ⚠️ No req.ip here. Use headers (Edge-safe) and optional x-user-id
   const h = req.headers;
   const userId = h.get("x-user-id")?.trim();
   const ip =
