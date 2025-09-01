@@ -1,90 +1,93 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
-import { X } from "lucide-react"
-import { saveLead } from "@/app/actions/save-lead"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { X } from "lucide-react";
 
 interface LeadCapturePopupProps {
-  source: string // which page the user is on
-  delay?: number // delay in milliseconds before showing popup
+  source: string; // which page the user is on
+  delay?: number; // delay in milliseconds before showing popup
 }
 
 export function LeadCapturePopup({ source, delay = 5000 }: LeadCapturePopupProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [hasShown, setHasShown] = useState(false)
-  const { toast } = useToast()
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasShown, setHasShown] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Check if popup has already been shown in this session
-    const popupShown = sessionStorage.getItem(`lead-popup-${source}`)
+    const popupKey = `lead-popup-${source}`;
+    const popupShown = sessionStorage.getItem(popupKey);
 
     if (!popupShown && !hasShown) {
       const timer = setTimeout(() => {
-        setIsOpen(true)
-        setHasShown(true)
-        sessionStorage.setItem(`lead-popup-${source}`, "true")
-      }, delay)
+        setIsOpen(true);
+        setHasShown(true);
+        sessionStorage.setItem(popupKey, "true");
+      }, delay);
 
-      return () => clearTimeout(timer)
+      return () => clearTimeout(timer);
     }
-  }, [source, delay, hasShown])
+  }, [source, delay, hasShown]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
     try {
-      const result = await saveLead({
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        source: source,
-      })
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          source,
+        }),
+      });
 
-      if (result.success) {
+      const result = await res.json();
+
+      if (res.ok && result?.success) {
         toast({
           title: "Thank you for your interest!",
           description: "Our team will reach out to you soon to provide personalized help.",
-        })
-        setFormData({ name: "", email: "", phone: "" })
-        setIsOpen(false)
+        });
+        setFormData({ name: "", email: "", phone: "" });
+        setIsOpen(false);
       } else {
         toast({
           title: "Something went wrong",
-          description: "Please try again or contact us directly.",
+          description: result?.error || "Please try again or contact us directly.",
           variant: "destructive",
-        })
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: "Something went wrong",
-        description: "Please try again or contact us directly.",
+        title: "Unexpected error",
+        description: error?.message || "Please try again later.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
-  const handleClose = () => {
-    setIsOpen(false)
-  }
+  const handleClose = () => setIsOpen(false);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -102,6 +105,7 @@ export function LeadCapturePopup({ source, delay = 5000 }: LeadCapturePopupProps
             Get tailored guidance for your business planning needs. Our experts are here to help!
           </p>
         </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           <div className="space-y-2">
             <Label htmlFor="name">Full Name</Label>
@@ -139,6 +143,7 @@ export function LeadCapturePopup({ source, delay = 5000 }: LeadCapturePopupProps
               className="rounded-2xl"
             />
           </div>
+
           <div className="flex gap-3">
             <Button
               type="button"
@@ -159,5 +164,5 @@ export function LeadCapturePopup({ source, delay = 5000 }: LeadCapturePopupProps
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

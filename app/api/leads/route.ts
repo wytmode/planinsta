@@ -2,6 +2,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveLead } from "@/app/actions/save-lead";
 
+// Ensure Node runtime (safe for DB/Supabase service key usage)
+export const runtime = "nodejs";
+// Prevent static analysis/SSG on this route
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

@@ -1,16 +1,18 @@
-"use server"
+"use server";
 
-import { supabase } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server";
 
 interface LeadData {
-  name: string
-  email: string
-  phone: string
-  source: string
+  name: string;
+  email: string;
+  phone: string;
+  source: string;
 }
 
 export async function saveLead(leadData: LeadData) {
   try {
+    const supabase = getSupabaseServer();
+
     const { data, error } = await supabase
       .from("leads")
       .insert([
@@ -21,16 +23,16 @@ export async function saveLead(leadData: LeadData) {
           source: leadData.source,
         },
       ])
-      .select()
+      .select();
 
     if (error) {
-      console.error("Error saving lead:", error)
-      return { success: false, error: error.message }
+      console.error("Error saving lead:", error);
+      return { success: false, error: error.message };
     }
 
-    return { success: true, data }
-  } catch (error) {
-    console.error("Error saving lead:", error)
-    return { success: false, error: "Failed to save lead" }
+    return { success: true, data };
+  } catch (error: any) {
+    console.error("Error saving lead:", error);
+    return { success: false, error: error?.message ?? "Failed to save lead" };
   }
 }
