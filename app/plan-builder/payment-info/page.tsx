@@ -7,8 +7,8 @@ import { ShieldCheck, CreditCard, Sparkles } from "lucide-react"
 // const AMOUNT_PAISE = 199900 // ₹1,999
 // const AMOUNT_DISPLAY = "₹1,999"
 
-const AMOUNT_PAISE = 100 // ₹10
-const AMOUNT_DISPLAY = "₹1"   // or "Rs 10" if you prefer that format
+const AMOUNT_PAISE = 999 // ₹10
+const AMOUNT_DISPLAY = "₹999"   // or "Rs 10" if you prefer that format
 
 export default function PaymentInfoPage() {
   return (
