@@ -46,7 +46,6 @@ export default async function middleware(req: NextRequest) {
     h.get("x-real-ip")?.trim() ||
     h.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() ||
     h.get("cf-connecting-ip")?.trim() ||
-    req.ip ||
     "127.0.0.1";
 
   const key = userId ? `user:${userId}` : `ip:${ip}`;
