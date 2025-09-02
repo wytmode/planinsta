@@ -1,29 +1,28 @@
 // app/plan-builder/payment-info/page.tsx
-"use client"
-
-import Link from "next/link"
-import { ShieldCheck, CreditCard, Sparkles } from "lucide-react"
-
-const AMOUNT_PAISE = 100;   // ₹1
-const AMOUNT_DISPLAY = "₹1";
-
-// const AMOUNT_PAISE = 99900; // ₹999
-// const AMOUNT_DISPLAY = "₹999"; 
+import Link from "next/link";
+import { ShieldCheck, CreditCard, Sparkles } from "lucide-react";
+import { getPriceRupees } from "@/lib/pricing"; // reads PLANINSTA_PRICE_RUPEES on the server
 
 export default function PaymentInfoPage() {
+  // Server component: safe to read non-public env via lib helper
+  const rupees = getPriceRupees();                 // e.g., 999
+  const AMOUNT_DISPLAY = `₹${rupees}`;             // "₹999"
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-6">
       <div className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
         {/* Header / banner */}
-        <div className="px-8 py-10 text-white text-center rounded-b-3xl
-                bg-gradient-to-r from-[#FF7A00] to-[#F0435C]">
-            <h1 className="text-3xl font-semibold flex items-center justify-center gap-2">
-                <Sparkles className="w-7 h-7" />
-                Complete Your Payment
-            </h1>
-            <p className="mt-2 text-sm/relaxed opacity-90">
-                Unlock full access to the plan builder instantly after payment.
-            </p>
+        <div
+          className="px-8 py-10 text-white text-center rounded-b-3xl
+                     bg-gradient-to-r from-[#FF7A00] to-[#F0435C]"
+        >
+          <h1 className="text-3xl font-semibold flex items-center justify-center gap-2">
+            <Sparkles className="w-7 h-7" />
+            Complete Your Payment
+          </h1>
+          <p className="mt-2 text-sm/relaxed opacity-90">
+            Unlock full access to the plan builder instantly after payment.
+          </p>
         </div>
 
         {/* Body */}
@@ -49,22 +48,21 @@ export default function PaymentInfoPage() {
           </ul>
 
           {/* CTA */}
+          {/* Amount is now sourced server-side; no query string needed */}
           <Link
-            href={`/plan-builder/payment?amount=${AMOUNT_PAISE}`}
+            href="/plan-builder/payment"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-black dark:bg-white text-white dark:text-black text-sm font-medium hover:opacity-90 transition"
           >
-             {/* Pay {AMOUNT_DISPLAY} */}
-             Get Started
+            Get Started
             <CreditCard className="w-4 h-4" />
           </Link>
 
           {/* Small print */}
           <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-4">
-            By proceeding, you agree to our Terms & Privacy Policy.
+            By proceeding, you agree to our Terms &amp; Privacy Policy.
           </p>
         </div>
       </div>
     </div>
-  )
+  );
 }
-
