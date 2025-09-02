@@ -11,7 +11,8 @@ export async function POST(request: Request) {
   try {
     const { amount } = await request.json()
     const order = await client.orders.create({
-      amount: 99900,           // ← ₹10 in paise
+      // amount: 99900,           // ← ₹999 in paise
+      amount: 100, // ₹1
       currency: "INR",
       receipt: `plan_receipt_${Date.now()}`,
       payment_capture: 1,
