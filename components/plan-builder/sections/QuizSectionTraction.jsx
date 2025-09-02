@@ -39,8 +39,12 @@ export default function QuizSectionTraction({
     monthlyRevenue,
     oneLiner,
   };
+
   const [achActive, setAchActive] = useState(false);
   const [nextActive, setNextActive] = useState(false);
+
+  // NEW: which achievement field is focused
+  const [focusedAchIdx, setFocusedAchIdx] = useState(0);
 
   useEffect(() => {
     document.body.classList.remove("glass-bg");
@@ -64,12 +68,20 @@ export default function QuizSectionTraction({
     });
 
   const addAchievement = () =>
-    setVal((v) => ({ ...v, achievements: [...v.achievements, ""] }));
+    setVal((v) => {
+      const next = [...v.achievements, ""];
+      // focus the newly added input
+      setFocusedAchIdx(next.length - 1);
+      return { ...v, achievements: next };
+    });
 
   const removeAchievement = (i) =>
     setVal((v) => {
       const next = [...v.achievements];
       if (next.length > 1) next.splice(i, 1);
+      // keep focus index valid
+      const newIdx = Math.max(0, Math.min(focusedAchIdx, next.length - 1));
+      setFocusedAchIdx(newIdx);
       return { ...v, achievements: next };
     });
 
@@ -147,13 +159,15 @@ export default function QuizSectionTraction({
               <div className="space-y-3">
                 {val.achievements.map((a, i) => (
                   <div key={`ach-${i}`} className="flex items-center gap-3">
-                    {/* The magic: flex-1 + min-w-0 so the input can actually grow */}
                     <div className="flex-1 min-w-0">
                       <Lift className="w-full">
                         <Input
                           value={a}
                           onChange={(e) => setAchievement(i, e.target.value)}
-                          onFocus={() => setAchActive(true)}
+                          onFocus={() => {
+                            setAchActive(true);
+                            setFocusedAchIdx(i); // << focus tracking
+                          }}
                           placeholder={
                             i === 0
                               ? "e.g., Launched MVP with 50 beta users"
@@ -193,9 +207,15 @@ export default function QuizSectionTraction({
                   context={tractionContext}
                   target="achievements"
                   active={achActive}
-                  onPick={(text) =>
-                    setVal((v) => ({ ...v, achievements: [...v.achievements, text] }))
-                  }
+                  onPick={(text) => {
+                    setVal((v) => {
+                      const next = [...v.achievements];
+                      const idx = Math.min(focusedAchIdx ?? 0, next.length - 1);
+                      next[idx] = text; // << write into the focused field
+                      return { ...v, achievements: next };
+                    });
+                    setAchActive(false); // optional: close after pick
+                  }}
                   className="mt-2"
                 />
               </div>
@@ -222,7 +242,10 @@ export default function QuizSectionTraction({
                 context={tractionContext}
                 target="nextMilestone"
                 active={nextActive}
-                onPick={(text) => setVal((v) => ({ ...v, upcomingMilestone: text }))}
+                onPick={(text) => {
+                  setVal((v) => ({ ...v, upcomingMilestone: text }));
+                  setNextActive(false);
+                }}
                 className="mt-2"
               />
             </Field>
