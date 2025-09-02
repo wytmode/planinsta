@@ -13,6 +13,8 @@ const rzp = new Razorpay({
 const STATIC_ALLOWED = new Set<string>([
   "https://planinsta-gen.vercel.app", // ← your new prod
   "http://localhost:3000",            // dev
+  "https://app.planinsta.com"
+  
 ]);
 
 function isAllowedOrigin(origin: string) {
